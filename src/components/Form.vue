@@ -1,16 +1,19 @@
 <script setup>
-import {ref,reactive,onMounted} from "vue"
+import { ref, reactive, onMounted, defineProps, watch } from "vue"
 import { airtableBase } from "../api/airtable"
 import vSelect from 'vue-select'
 import VueDatePicker from '@vuepic/vue-datepicker';
 import { GoogleMap, Polyline } from "vue3-google-map";
-import { MaskInput } from 'vue-3-mask';
 import { useToast } from 'vue-toast-notification';
 import { postCode } from "../api/postCodes"
 const { VITE_LAT, VITE_LNG, VITE_MAP_API } = import.meta.env;
+const props = defineProps({
+    rowId: String,
+});
 const estatePostalCode = { lat: parseFloat(VITE_LAT), lng: parseFloat(VITE_LNG) };
 const mapZoom = ref(10);
 const btnPost = ref(false);
+const isEditForm = ref(false);
 const estateEmployeeNameOption = ref([]);
 const $toast = useToast();
 const distanceObj = reactive({});
@@ -24,13 +27,19 @@ const AppointmentForm = reactive({
     agent_name: null
 })
 const btnCreate = () => {
+    validationControl() === true && createAppointments();
+}
+const btnEdit = () => {
+    validationControl() === true && editAppointments();
+}
+const validationControl = () => {
     for (const property in AppointmentForm) {
         if (!AppointmentForm[property]) {
             $toast.error('Lütfen tüm alanları doldurunuz!');
             return
         }
     }
-    createAppointments();
+    return true
 }
 const format = (date) => {
     const day = date.getDate();
@@ -139,6 +148,9 @@ const createAppointments = () => {
     });
     clearForm();
 }
+const editAppointments = () => {
+    alert("13212")
+}
 const estateEmployeeNameLoaded = () => {
     airtableBase('AgentNameTbl').select({
         view: "Grid"
@@ -154,17 +166,26 @@ const estateEmployeeNameLoaded = () => {
 }
 const clearForm = () => {
     for (const property in AppointmentForm) {
-        AppointmentForm[property] = null        
+        AppointmentForm[property] = null
     }
     distanceLine.value = null
     distanceObj.value = null
-    document.getElementById("contact_phone").value = null
 }
 
 onMounted(() => {
     estateEmployeeNameLoaded();
 });
 
+watch(() => props.rowId, (id) => {
+    isEditForm.value = id ? true : false
+    airtableBase('RealEstateTbl').find(id, function (err, record) {
+        if (err) { console.error(err); return; }
+        for (const property in AppointmentForm) {
+            AppointmentForm[property] = record.get([property])
+        }
+        getPostCode(record.get('appointment_postcode'))
+    });
+});
 
 </script>
 <template>
@@ -201,8 +222,7 @@ onMounted(() => {
         <div class="mb-3 row">
             <label for="contact_phone" class="col-sm-2 col-form-label">Telefon Numarası</label>
             <div class="col-sm-10">
-                <MaskInput class="form-control" v-model="AppointmentForm.contact_phone" id="contact_phone"
-                    mask="###########" />
+                <input type="text" class="form-control" v-model="AppointmentForm.contact_phone" id="contact_phone">
             </div>
         </div>
         <div class="mb-3 row">
@@ -214,7 +234,7 @@ onMounted(() => {
         <div class="alert alert-primary" v-if="distanceObj.value">
             <p>Adrese emlak ofisinden olan uzaklık = <strong>{{ distanceObj?.value?.distance?.text }}</strong></p>
             <p>Emlak ofisinden adrese sürecek toplam süre = <strong>{{ distanceObj?.value?.duration?.text }}</strong></p>
-            <p class="mb-0" v-if="AppointmentForm.appointment_date">
+            <p class="mb-0" v-if="distanceObj.value.estimated">
                 Tahmini ofisten çıkış zamanı = <strong><u>{{ distanceObj?.value?.estimated }}</u></strong>
             </p>
         </div>
@@ -224,7 +244,10 @@ onMounted(() => {
                 <Polyline :options="distanceLine.value" v-if="distanceLine.value" />
             </GoogleMap>
         </div>
-        <button class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnPost">Randevu Oluştur</button>
+        <button v-if="!isEditForm" class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnPost">Randevu
+            Oluştur</button>
+        <button v-else class="btn w-100 btn-primary btn-lg" @click="btnEdit()" :disabled="btnPost">Randevu
+            Düzenle</button>
     </div>
 </template>
 
