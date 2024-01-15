@@ -1,0 +1,232 @@
+<script setup>
+import {ref,reactive,onMounted} from "vue"
+import { airtableBase } from "../api/airtable"
+import vSelect from 'vue-select'
+import VueDatePicker from '@vuepic/vue-datepicker';
+import { GoogleMap, Polyline } from "vue3-google-map";
+import { MaskInput } from 'vue-3-mask';
+import { useToast } from 'vue-toast-notification';
+import { postCode } from "../api/postCodes"
+const { VITE_LAT, VITE_LNG, VITE_MAP_API } = import.meta.env;
+const estatePostalCode = { lat: parseFloat(VITE_LAT), lng: parseFloat(VITE_LNG) };
+const mapZoom = ref(10);
+const btnPost = ref(false);
+const estateEmployeeNameOption = ref([]);
+const $toast = useToast();
+const distanceObj = reactive({});
+const distanceLine = reactive({});
+const AppointmentForm = reactive({
+    appointment_postcode: null,
+    appointment_date: null,
+    contact_name: null,
+    contact_email: null,
+    contact_phone: null,
+    agent_name: null
+})
+const btnCreate = () => {
+    for (const property in AppointmentForm) {
+        if (!AppointmentForm[property]) {
+            $toast.error('Lütfen tüm alanları doldurunuz!');
+            return
+        }
+    }
+    createAppointments();
+}
+const format = (date) => {
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+
+    return `${day}.${month}.${year} - ${hour}:${minute}`;
+}
+const handleDate = (modelData) => {
+    const hour = modelData.getHours();
+    const minute = modelData.getMinutes();
+    const appointmentTime = hour + ":" + minute;
+    const totalMinutes = Math.floor(distanceObj.value.duration.value / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
+    const durationTime = hours + ":" + remainingMinutes;
+    estimatedTime(appointmentTime, durationTime)
+}
+const estimatedTime = (appointmentTime, durationTime) => {
+    var [hour1, minute1] = appointmentTime.split(":").map(Number);
+    var [hour2, minute2] = durationTime.split(":").map(Number);
+    var totalMinutes1 = hour1 * 60 + minute1;
+    var totalMinutes2 = hour2 * 60 + minute2;
+    var differenceInMinutes = totalMinutes1 - totalMinutes2;
+    var resultHours = Math.floor(differenceInMinutes / 60);
+    var resultMinutes = differenceInMinutes % 60;
+    distanceObj.value.estimated = resultHours + ":" + resultMinutes;
+}
+const getPostCode = (code) => {
+    postCode(code).then(function (response) {
+        if (response.status === 200) {
+            getDistance(response.data.result);
+            setDistanceLine(response.data.result);
+        }
+    }).catch(() => {
+        $toast.error('Lütfen İngiltere de geçerli bir posta kodu giriniz!');
+        distanceObj.value = ""
+        AppointmentForm.appointment_postcode = null;
+    })
+}
+const getDistance = (response) => {
+    const { latitude, longitude } = response;
+    const service = new window.google.maps.DistanceMatrixService();
+    const matrixOptions = {
+        origins: [new window.google.maps.LatLng(estatePostalCode.lat, estatePostalCode.lng)],
+        destinations: [new window.google.maps.LatLng(latitude, longitude)],
+        travelMode: 'DRIVING',
+    };
+    service.getDistanceMatrix(matrixOptions, (response, status) => {
+        if (status === 'OK') {
+            //console.log(response)
+            const elements = response.rows[0].elements[0];
+            distanceObj.value = elements;
+            zoomSetting(parseInt(distanceObj.value.distance.text))
+
+        } else {
+            console.error(`Distance Matrix request failed due to ${status}`);
+        }
+    });
+}
+const setDistanceLine = (response) => {
+    const { latitude, longitude } = response;
+    const coordinates = [
+        { lat: estatePostalCode.lat, lng: estatePostalCode.lng },
+        { lat: latitude, lng: longitude }
+    ];
+    distanceLine.value = {
+        path: coordinates,
+        geodesic: true,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 2,
+    };
+}
+const zoomSetting = (val) => {
+    if (val > 500) {
+        mapZoom.value = 5
+    }
+    else if (val > 200 && val <= 500) {
+        mapZoom.value = 6
+    }
+    else if (val > 100 && val <= 200) {
+        mapZoom.value = 7
+    }
+    else if (val > 80 && val <= 100) {
+        mapZoom.value = 8
+    }
+    else {
+        mapZoom.value = 10
+    }
+}
+const createAppointments = () => {
+    btnPost.value = true;
+    airtableBase('RealEstateTbl').create({
+        ...AppointmentForm
+    }, function (err, record) {
+        if (err) {
+            console.error(err);
+            $toast.error('Randevu oluşturulurken hata meydana geldi');
+            return;
+        }
+        btnPost.value = false;
+        $toast.success('Randevu başarılı bir şekilde oluşturuldu');
+    });
+    clearForm();
+}
+const estateEmployeeNameLoaded = () => {
+    airtableBase('AgentNameTbl').select({
+        view: "Grid"
+    }).eachPage(function page(records) {
+        records.forEach(function (record) {
+            estateEmployeeNameOption.value.push(record.get('agent_name'))
+            const filter = [...new Set(estateEmployeeNameOption.value)];
+            estateEmployeeNameOption.value = filter;
+        });
+    }, function done(err) {
+        if (err) { console.error(err); return; }
+    });
+}
+const clearForm = () => {
+    for (const property in AppointmentForm) {
+        AppointmentForm[property] = null        
+    }
+    distanceLine.value = null
+    distanceObj.value = null
+    document.getElementById("contact_phone").value = null
+}
+
+onMounted(() => {
+    estateEmployeeNameLoaded();
+});
+
+
+</script>
+<template>
+    <div class="form">
+        <div class="mb-3 row">
+            <label for="appointment_postcode" class="col-sm-2 col-form-label">Randevu adresinin posta kodu</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="appointment_postcode"
+                    v-model="AppointmentForm.appointment_postcode" @change="(e) => getPostCode(e.target.value)">
+            </div>
+        </div>
+        <div class="mb-3 row" v-if="distanceObj.value">
+            <label for="appointment_date" class="col-sm-2 col-form-label">Randevu tarihi</label>
+            <div class="col-sm-10">
+                <VueDatePicker v-model="AppointmentForm.appointment_date" :format="format" :min-date="new Date()"
+                    @update:model-value="handleDate"></VueDatePicker>
+            </div>
+        </div>
+
+        <h4>Katılacak müşterinin</h4>
+        <hr>
+        <div class="mb-3 row">
+            <label for="contact_name" class="col-sm-2 col-form-label">Ad Soyad</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" v-model="AppointmentForm.contact_name" id="contact_name">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="contact_email" class="col-sm-2 col-form-label">Email adresi</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" v-model="AppointmentForm.contact_email" id="contact_email">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="contact_phone" class="col-sm-2 col-form-label">Telefon Numarası</label>
+            <div class="col-sm-10">
+                <MaskInput class="form-control" v-model="AppointmentForm.contact_phone" id="contact_phone"
+                    mask="###########" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="agent_name" class="col-sm-2 col-form-label">Müşteri ile ilgilenecek emlakçı çalışanı</label>
+            <div class="col-sm-10">
+                <v-select :options="estateEmployeeNameOption" v-model="AppointmentForm.agent_name"></v-select>
+            </div>
+        </div>
+        <div class="alert alert-primary" v-if="distanceObj.value">
+            <p>Adrese emlak ofisinden olan uzaklık = <strong>{{ distanceObj?.value?.distance?.text }}</strong></p>
+            <p>Emlak ofisinden adrese sürecek toplam süre = <strong>{{ distanceObj?.value?.duration?.text }}</strong></p>
+            <p class="mb-0" v-if="AppointmentForm.appointment_date">
+                Tahmini ofisten çıkış zamanı = <strong><u>{{ distanceObj?.value?.estimated }}</u></strong>
+            </p>
+        </div>
+        <div class="mb-3 row" v-show="distanceObj.value">
+            <GoogleMap class="mb-3" id="map" :api-key="VITE_MAP_API" style="width: 100%; height: 500px"
+                :center="estatePostalCode" :zoom="mapZoom">
+                <Polyline :options="distanceLine.value" v-if="distanceLine.value" />
+            </GoogleMap>
+        </div>
+        <button class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnPost">Randevu Oluştur</button>
+    </div>
+</template>
+
+
+<style scoped></style>
