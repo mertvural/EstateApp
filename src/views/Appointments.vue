@@ -46,7 +46,7 @@ const filteredList = computed(() => {
     <h3><i class="bi bi-table"></i> Randevular</h3>
     <hr>
     <div class="row my-4">
-        <div class="col-lg-6">
+        <div class="col-lg-6 mb-2 mb-lg-0">
             <input type="text" class="form-control" placeholder="Emlakçı ismine göre filtrele" v-model="searchText" />
         </div>
         <div class="col-lg-6">
@@ -58,6 +58,7 @@ const filteredList = computed(() => {
             </select>
         </div>
     </div>
+   <div class="table-responsive">
     <table class="table table-striped align-middle">
         <thead>
             <tr>
@@ -96,6 +97,7 @@ const filteredList = computed(() => {
             </tr>
         </tbody>
     </table>
+   </div>
     <Modal :rowId="rowId" />    
 </template>
 <style scoped></style>

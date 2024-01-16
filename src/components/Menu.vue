@@ -6,11 +6,11 @@
 
         <h2 class="mb-4">Menu</h2>
 
-        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
-            <li class="nav-item mb-3">
+        <ul class="nav nav-pills flex-row flex-md-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+            <li class="nav-item mb-0 mb-md-3 me-3 me-md-0">
                 <router-link to="/" class="nav-link px-0 text-white"><i class="bi bi-house"></i> Ana sayfa</router-link>
             </li>
-            <li class="nav-item mb-3">
+            <li class="nav-item mb-0 mb-md-3 me-3 me-md-0">
                 <router-link to="/Appointments" class="nav-link px-0 text-white"><i class="bi bi-table"></i>
                     Randevular</router-link>
             </li>

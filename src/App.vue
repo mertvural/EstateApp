@@ -9,10 +9,10 @@ import Menu from './components/Menu.vue'
     <Header />
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+            <nav class="col-12 col-md-3 col-lg-2 col-xl-2 bg-dark py-2">
                 <Menu />
             </nav>
-            <main class="col py-4 px-4">
+            <main class="col-12 col-md-9 col-lg-10 col-xl-10 px-4 py-4">
                 <RouterView />
             </main>
         </div>
