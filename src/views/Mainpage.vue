@@ -2,11 +2,11 @@
 </script>
 <template>
     <h3>
-        EstateApp Dashboard hoşgeldiniz.
+        <i class="bi bi-pin-map-fill"></i> EstateApp Dashboard hoşgeldiniz.
     </h3>
     <hr>
     <p>
-        Soldaki menüden randevu oluşturup kayıtların listesine bakabilirsiniz.
+        <i class="bi bi-megaphone"></i> Soldaki menüden randevu oluşturup kayıtların listesine bakabilirsiniz.
     </p>
     <p>
         <a href="https://github.com/mertvural/EstateApp" target="_blank" class="d-flex align-items-center text-decoration-none alert alert-primary">

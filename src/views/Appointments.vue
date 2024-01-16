@@ -1,32 +1,63 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { airtableBase } from "../api/airtable"
-import Form from "@/components/Form.vue";
+import { useLoading } from 'vue-loading-overlay'
+import Modal from "@/components/Modal.vue";
 const tableDatas = ref([])
 const rowId = ref();
+const $loading = useLoading();
+const searchText = ref("");
 const loadedTable = () => {
+    const loader = $loading.show();
     airtableBase('RealEstateTbl').select({
         view: "Grid"
-    }).eachPage(function page(records) {
+    }).eachPage(function page(records, fetchNextPage) {
         records.forEach(function (record) {
             tableDatas.value.push(record)
         });
-    }, function done(err) {
-        if (err) { console.error(err); return; }
+        fetchNextPage();
+    }, (err) => {
+        loader.hide()
+        if (err) {
+            console.error(err);
+            return;
+        }
     });
 }
 const edit = (id) => {
     rowId.value = id
 }
-
-
+const sortDate = (val) => {
+    if (val === "increasing") {
+        return tableDatas.value.sort((a, b) => new Date(a.fields.appointment_date) - new Date(b.fields.appointment_date));
+    }
+    else {
+        return tableDatas.value.sort((b,a) => new Date(a.fields.appointment_date) - new Date(b.fields.appointment_date));
+    }
+}
 onMounted(() => {
     loadedTable();
 });
+const filteredList = computed(() => {
+    return tableDatas.value.filter(item => item.fields.agent_name.toLowerCase().includes(searchText.value.toLowerCase()));
+})
 </script>
 <template>
-    <h3>Randevular</h3>
+    <h3><i class="bi bi-table"></i> Randevular</h3>
     <hr>
+    <div class="row my-4">
+        <div class="col-lg-6">
+            <input type="text" class="form-control" placeholder="Emlakçı ismine göre filtrele" v-model="searchText" />
+        </div>
+        <div class="col-lg-6">
+            <!-- <v-select v-model="selectedOption" :options="options" @change="handleSelectChange" /> -->
+            <select class="form-control" @change="(e) => sortDate(e.target.value)">
+                <option value="" disabled selected>Randevu tarihine göre sırala</option>
+                <option value="increasing">Yakın tarihten uzağa göre</option>
+                <option value="decreasing">Uzak tarihten yakın tarihe göre</option>
+            </select>
+        </div>
+    </div>
     <table class="table table-striped align-middle">
         <thead>
             <tr>
@@ -39,48 +70,32 @@ onMounted(() => {
             </tr>
         </thead>
         <tbody>
-            <tr v-for="datas in tableDatas">
+            <tr v-for="item in filteredList" :key="item.id">
                 <td>
-                    {{ datas.fields.appointment_postcode }}
+                    {{ item.fields.appointment_postcode }}
                 </td>
                 <td>
-                    {{ datas.fields.appointment_date }}
+                    {{ item.fields.appointment_date }}
                 </td>
                 <td>
-                    {{ datas.fields.contact_name }}
+                    {{ item.fields.contact_name }}
                 </td>
                 <td>
-                    {{ datas.fields.contact_email }}
+                    {{ item.fields.contact_email }}
                 </td>
                 <td>
-                    {{ datas.fields.contact_phone }}
+                    {{ item.fields.contact_phone }}
                 </td>
                 <td>
-                    {{ datas.fields.agent_name }}
+                    {{ item.fields.agent_name }}
                 </td>
                 <td>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                        @click="edit(datas.id)">Düzenle</button>
+                        @click="edit(item.id)">Düzenle</button>
                 </td>
             </tr>
         </tbody>
     </table>
-
-    <!-- Modal -->
-    <div class="modal fade" id="editModal">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Modal title</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <Form :rowId="rowId" />
-                </div>
-            </div>
-        </div>
-    </div>
+    <Modal :rowId="rowId" />    
 </template>
-
-
 <style scoped></style>

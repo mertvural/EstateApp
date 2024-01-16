@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted, defineProps, watch } from "vue"
+import { useLoading } from 'vue-loading-overlay'
 import { airtableBase } from "../api/airtable"
 import vSelect from 'vue-select'
 import VueDatePicker from '@vuepic/vue-datepicker';
@@ -12,12 +13,14 @@ const props = defineProps({
 });
 const estatePostalCode = { lat: parseFloat(VITE_LAT), lng: parseFloat(VITE_LNG) };
 const mapZoom = ref(10);
-const btnPost = ref(false);
+const $loading = useLoading();
+const btnDisabled = ref(false);
 const isEditForm = ref(false);
 const estateEmployeeNameOption = ref([]);
 const $toast = useToast();
 const distanceObj = reactive({});
 const distanceLine = reactive({});
+const editRowId = ref();
 const AppointmentForm = reactive({
     appointment_postcode: null,
     appointment_date: null,
@@ -71,6 +74,7 @@ const estimatedTime = (appointmentTime, durationTime) => {
     distanceObj.value.estimated = resultHours + ":" + resultMinutes;
 }
 const getPostCode = (code) => {
+    const loader = $loading.show();
     postCode(code).then(function (response) {
         if (response.status === 200) {
             getDistance(response.data.result);
@@ -80,6 +84,8 @@ const getPostCode = (code) => {
         $toast.error('Lütfen İngiltere de geçerli bir posta kodu giriniz!');
         distanceObj.value = ""
         AppointmentForm.appointment_postcode = null;
+    }).finally(() => {
+        loader.hide();
     })
 }
 const getDistance = (response) => {
@@ -134,22 +140,43 @@ const zoomSetting = (val) => {
     }
 }
 const createAppointments = () => {
-    btnPost.value = true;
+    btnDisabled.value = true;
+    const loader = $loading.show();
     airtableBase('RealEstateTbl').create({
         ...AppointmentForm
     }, function (err, record) {
         if (err) {
             console.error(err);
             $toast.error('Randevu oluşturulurken hata meydana geldi');
+            btnDisabled.value = false;
+            loader.hide()
             return;
         }
-        btnPost.value = false;
+        btnDisabled.value = false;
         $toast.success('Randevu başarılı bir şekilde oluşturuldu');
+        loader.hide()
     });
     clearForm();
 }
 const editAppointments = () => {
-    alert("13212")
+    btnDisabled.value = true;
+    const loader = $loading.show();
+    airtableBase('RealEstateTbl').update(editRowId.value, {
+        ...AppointmentForm
+    }, function (err, record) {
+        if (err) {
+            console.error(err);
+            $toast.error('Randevu düzenlenirken hata meydana geldi');
+            loader.hide()
+            btnDisabled.value = false;
+            return;
+        }
+        loader.hide()
+        $toast.success('Randevu başarılı bir şekilde düzenlendi');
+        btnDisabled.value = false;
+        var myModalEl = document.getElementById('editModal');
+        myModalEl && myModalEl.querySelector(".btn-close").click();
+    });
 }
 const estateEmployeeNameLoaded = () => {
     airtableBase('AgentNameTbl').select({
@@ -177,6 +204,7 @@ onMounted(() => {
 });
 
 watch(() => props.rowId, (id) => {
+    editRowId.value = id; //get the edit row id
     isEditForm.value = id ? true : false
     airtableBase('RealEstateTbl').find(id, function (err, record) {
         if (err) { console.error(err); return; }
@@ -222,7 +250,8 @@ watch(() => props.rowId, (id) => {
         <div class="mb-3 row">
             <label for="contact_phone" class="col-sm-2 col-form-label">Telefon Numarası</label>
             <div class="col-sm-10">
-                <input type="text" class="form-control" v-model="AppointmentForm.contact_phone" id="contact_phone">
+                <input type="text" class="form-control" v-model="AppointmentForm.contact_phone" id="contact_phone"
+                    maxlength="11">
             </div>
         </div>
         <div class="mb-3 row">
@@ -244,9 +273,9 @@ watch(() => props.rowId, (id) => {
                 <Polyline :options="distanceLine.value" v-if="distanceLine.value" />
             </GoogleMap>
         </div>
-        <button v-if="!isEditForm" class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnPost">Randevu
+        <button v-if="!isEditForm" class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnDisabled">Randevu
             Oluştur</button>
-        <button v-else class="btn w-100 btn-primary btn-lg" @click="btnEdit()" :disabled="btnPost">Randevu
+        <button v-else class="btn w-100 btn-primary btn-lg" @click="btnEdit()" :disabled="btnDisabled">Randevu
             Düzenle</button>
     </div>
 </template>
