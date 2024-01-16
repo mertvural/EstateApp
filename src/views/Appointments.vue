@@ -12,6 +12,7 @@ const loadedTable = () => {
     airtableBase('RealEstateTbl').select({
         view: "Grid"
     }).eachPage(function page(records, fetchNextPage) {
+        tableDatas.value = []
         records.forEach(function (record) {
             tableDatas.value.push(record)
         });
@@ -47,13 +48,13 @@ const filteredList = computed(() => {
     <hr>
     <div class="row my-4">
         <div class="col-lg-6 mb-2 mb-lg-0">
-            <input type="text" class="form-control" placeholder="Emlakçı ismine göre filtrele" v-model="searchText" />
+            <input type="text" class="form-control" placeholder="Emlakçı çalışan ismine göre filtrele" v-model="searchText" />
         </div>
         <div class="col-lg-6">
             <!-- <v-select v-model="selectedOption" :options="options" @change="handleSelectChange" /> -->
             <select class="form-control" @change="(e) => sortDate(e.target.value)">
                 <option value="" disabled selected>Randevu tarihine göre sırala</option>
-                <option value="increasing">Yakın tarihten uzağa göre</option>
+                <option value="increasing">Yakın tarihten uzak tarihe göre</option>
                 <option value="decreasing">Uzak tarihten yakın tarihe göre</option>
             </select>
         </div>
@@ -98,6 +99,6 @@ const filteredList = computed(() => {
         </tbody>
     </table>
    </div>
-    <Modal :rowId="rowId" />    
+    <Modal :rowId="rowId" :loadedTable="loadedTable" />    
 </template>
 <style scoped></style>

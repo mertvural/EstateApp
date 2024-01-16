@@ -10,6 +10,7 @@ import { postCode } from "../api/postCodes"
 const { VITE_LAT, VITE_LNG, VITE_MAP_API } = import.meta.env;
 const props = defineProps({
     rowId: String,
+    loadedTable : Function
 });
 const estatePostalCode = { lat: parseFloat(VITE_LAT), lng: parseFloat(VITE_LNG) };
 const mapZoom = ref(10);
@@ -173,6 +174,7 @@ const editAppointments = () => {
         }
         loader.hide()
         $toast.success('Randevu başarılı bir şekilde düzenlendi');
+        props.loadedTable();
         btnDisabled.value = false;
         var myModalEl = document.getElementById('editModal');
         myModalEl && myModalEl.querySelector(".btn-close").click();

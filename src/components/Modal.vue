@@ -3,6 +3,7 @@ import {defineProps, watch } from "vue"
 import Form from "@/components/Form.vue";
 const props = defineProps({
     rowId: String,
+    loadedTable: Function
 });
 </script>
 <template>
@@ -14,7 +15,7 @@ const props = defineProps({
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <Form :rowId="rowId" />
+                    <Form :rowId="rowId" :loadedTable="loadedTable" />
                 </div>
             </div>
         </div>
