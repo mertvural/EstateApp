@@ -7,7 +7,7 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import { GoogleMap, Polyline } from "vue3-google-map";
 import { useToast } from 'vue-toast-notification';
 import { postCode } from "../api/postCodes"
-const { VITE_LAT, VITE_LNG, VITE_MAP_API } = import.meta.env;
+const { VITE_LAT, VITE_LNG, VITE_MAP_API, VITE_APPOINTMENT_TIME } = import.meta.env;
 const props = defineProps({
     rowId: String,
     loadedTable: Function
@@ -22,13 +22,16 @@ const $toast = useToast();
 const distanceObj = reactive({});
 const distanceLine = reactive({});
 const editRowId = ref();
+const alert = ref(false);
+const alertText = ref(null)
 const AppointmentForm = reactive({
     appointment_postcode: null,
     appointment_date: null,
     contact_name: null,
     contact_email: null,
     contact_phone: null,
-    agent_name: null
+    agent_name: null,
+    time_period: null
 })
 const btnCreate = () => {
     validationControl() === true && createAppointments();
@@ -77,13 +80,21 @@ const estimatedTime = (appointmentTime, durationTime) => {
     let differenceInMinutes = totalMinutes1 - totalMinutes2;
     let resultHours = Math.floor(differenceInMinutes / 60);
     let resultMinutes = differenceInMinutes % 60;
-    if(resultHours < 0) {
+    let returnTime = totalMinutes1 + totalMinutes2;
+    let returnTimeHours = Math.floor(returnTime / 60) + parseInt(VITE_APPOINTMENT_TIME);
+    let returnTimeMinutes = returnTime % 60;
+    if (resultHours < 0) {
         resultHours = 24 - Math.abs(resultHours);
     }
-    if(resultMinutes < 0) {
-        resultMinutes =  59 - Math.abs(resultMinutes);
-    }  
-    distanceObj.value.estimated = resultHours + ":" + resultMinutes;
+    if (resultMinutes < 0) {
+        resultMinutes = 59 - Math.abs(resultMinutes);
+    }
+    if (returnTimeHours > 23) {
+        returnTimeHours = Math.abs(returnTimeHours) - 24
+    }
+    distanceObj.value.estimated = resultHours + ":" + resultMinutes;//going
+    distanceObj.value.estimatedReturn = returnTimeHours + ":" + returnTimeMinutes;//return office
+    AppointmentForm.time_period = distanceObj.value.estimated + "-" + distanceObj.value.estimatedReturn;
 }
 const getPostCode = (code) => {
     const loader = $loading.show();
@@ -212,6 +223,18 @@ const clearForm = () => {
     distanceObj.value = null
 }
 
+const isConflict = (start1, end1, start2, end2) => {
+    //console.log(start1, end1, start2, end2)
+    // console.log(start2)
+    // console.log(end1)
+    // console.log(start2 < end1 && start1 < end2)
+    return (
+        parseInt(start2.split(":")[0]) * 60 + parseInt(start2.split(":")[1]) < parseInt(end1.split(":")[0]) * 60 + parseInt(end1.split(":")[1])
+        &&
+        parseInt(start1.split(":")[0]) * 60 + parseInt(start1.split(":")[1]) < parseInt(end2.split(":")[0]) * 60 + parseInt(end2.split(":")[1])
+    );
+}
+
 onMounted(() => {
     estateEmployeeNameLoaded();
 });
@@ -227,6 +250,43 @@ watch(() => props.rowId, (id) => {
         getPostCode(record.get('appointment_postcode'))
     });
 });
+
+/*conflict time detect*/
+watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () => {
+    let conflictDetected = false;
+    if (AppointmentForm.agent_name !== null && AppointmentForm.appointment_date !== null) {
+        airtableBase('RealEstateTbl').select({
+            view: "Grid"
+        }).eachPage(function page(records) {
+            const nameFilter = records.filter((item) => {
+                if (item.fields.agent_name === AppointmentForm.agent_name
+                    && item.fields.appointment_date.split("-")[0] === AppointmentForm.appointment_date.split("-")[0]) {
+                    return item
+                }
+            })
+            nameFilter.forEach((item) => {
+               //console.log(item.fields.time_period)
+                let start1 = item.fields.time_period.split("-")[0];
+                let end1 = item.fields.time_period.split("-")[1];
+                let start2 = distanceObj.value.estimated;
+                let end2 = distanceObj.value.estimatedReturn;
+                let conflict = isConflict(start1, end1, start2, end2);
+                if (conflict) {
+                    alert.value = true;
+                    alertText.value = "Emlakçı çalışanı bu tarih ve saat aralığında çalışıyor. Başka tarih veya saat aralığı seçiniz.";
+                    conflictDetected = true;
+                    btnDisabled.value = true;
+                } else if(!conflictDetected) {
+                    alert.value = false;
+                    btnDisabled.value = false;
+                }
+            })
+
+        }, function done(err) {
+            if (err) { console.error(err); return; }
+        });
+    }
+})
 
 </script>
 <template>
@@ -273,11 +333,17 @@ watch(() => props.rowId, (id) => {
                 <v-select :options="estateEmployeeNameOption" v-model="AppointmentForm.agent_name"></v-select>
             </div>
         </div>
+        <div class="alert alert-danger" v-if="alert">
+            {{ alertText }}
+        </div>
         <div class="alert alert-primary" v-if="distanceObj.value">
             <p>Adrese emlak ofisinden olan uzaklık = <strong>{{ distanceObj?.value?.distance?.text }}</strong></p>
             <p>Emlak ofisinden adrese sürecek toplam süre = <strong>{{ distanceObj?.value?.duration?.text }}</strong></p>
-            <p class="mb-0" v-if="distanceObj.value.estimated">
+            <p v-if="distanceObj.value.estimated">
                 Tahmini ofisten çıkış zamanı = <strong><u>{{ distanceObj?.value?.estimated }}</u></strong>
+            </p>
+            <p class="mb-0" v-if="distanceObj.value.estimatedReturn">
+                Tahmini ofise varış zamanı = <strong><u>{{ distanceObj?.value?.estimatedReturn }}</u></strong>
             </p>
         </div>
         <div class="mb-3 row" v-show="distanceObj.value">
