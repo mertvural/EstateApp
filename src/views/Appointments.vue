@@ -36,6 +36,9 @@ const sortDate = (val) => {
         return tableDatas.value.sort((b,a) => new Date(a.fields.appointment_date) - new Date(b.fields.appointment_date));
     }
 }
+const disabledDate = (date) => {
+    return new Date() > new Date(date)
+}
 onMounted(() => {
     loadedTable();
 });
@@ -72,7 +75,7 @@ const filteredList = computed(() => {
             </tr>
         </thead>
         <tbody>
-            <tr v-for="item in filteredList" :key="item.id">
+            <tr v-for="item in filteredList" :key="item.id" :class="{disabled: disabledDate(item.fields.appointment_date)}">
                 <td>
                     {{ item.fields.appointment_postcode }}
                 </td>
@@ -93,7 +96,7 @@ const filteredList = computed(() => {
                 </td>
                 <td>
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                        @click="edit(item.id)">Düzenle</button>
+                        @click="edit(item.id)" :disabled="disabledDate(item.fields.appointment_date)">Düzenle</button>
                 </td>
             </tr>
         </tbody>
