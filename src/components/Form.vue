@@ -77,8 +77,12 @@ const estimatedTime = (appointmentTime, durationTime) => {
     let differenceInMinutes = totalMinutes1 - totalMinutes2;
     let resultHours = Math.floor(differenceInMinutes / 60);
     let resultMinutes = differenceInMinutes % 60;
-    resultHours = resultHours < 0 && 24 - Math.abs(resultHours);
-    resultMinutes = resultMinutes < 0 && 59 - Math.abs(resultMinutes);
+    if(resultHours < 0) {
+        resultHours = 24 - Math.abs(resultHours);
+    }
+    if(resultMinutes < 0) {
+        resultMinutes =  59 - Math.abs(resultMinutes);
+    }  
     distanceObj.value.estimated = resultHours + ":" + resultMinutes;
 }
 const getPostCode = (code) => {
