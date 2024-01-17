@@ -1,6 +1,7 @@
 # EstateApp
 
-This template should help get you started developing with Vue 3 in Vite.
+This project was built using Vue3 Vite with NodeJS **v20.9.0**, npm version **10.3.0**
+
 
 ## Recommended IDE Setup
 
@@ -13,17 +14,17 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 ## Project Setup
 
 ```sh
-pnpm install
+npm install
 ```
 
 ### Compile and Hot-Reload for Development
 
 ```sh
-pnpm dev
+npm run dev
 ```
 
 ### Compile and Minify for Production
 
 ```sh
-pnpm build
+npm run build
 ```
