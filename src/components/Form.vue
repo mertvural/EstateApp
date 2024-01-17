@@ -10,7 +10,7 @@ import { postCode } from "../api/postCodes"
 const { VITE_LAT, VITE_LNG, VITE_MAP_API } = import.meta.env;
 const props = defineProps({
     rowId: String,
-    loadedTable : Function
+    loadedTable: Function
 });
 const estatePostalCode = { lat: parseFloat(VITE_LAT), lng: parseFloat(VITE_LNG) };
 const mapZoom = ref(10);
@@ -55,8 +55,13 @@ const format = (date) => {
     return `${day}.${month}.${year} - ${hour}:${minute}`;
 }
 const handleDate = (modelData) => {
+    const day = modelData.getDate();
+    const month = modelData.getMonth() + 1;
+    const year = modelData.getFullYear();
     const hour = modelData.getHours();
     const minute = modelData.getMinutes();
+    const formattedDate = year + "." + (month < 10 ? '0' : '') + month + "." + (day < 10 ? '0' : '') + day + "-" + (hour < 10 ? '0' : '') + hour + ":" + (minute < 10 ? '0' : '') + minute;
+    AppointmentForm.appointment_date = formattedDate;
     const appointmentTime = hour + ":" + minute;
     const totalMinutes = Math.floor(distanceObj.value.duration.value / 60);
     const hours = Math.floor(totalMinutes / 60);
@@ -65,13 +70,15 @@ const handleDate = (modelData) => {
     estimatedTime(appointmentTime, durationTime)
 }
 const estimatedTime = (appointmentTime, durationTime) => {
-    var [hour1, minute1] = appointmentTime.split(":").map(Number);
-    var [hour2, minute2] = durationTime.split(":").map(Number);
-    var totalMinutes1 = hour1 * 60 + minute1;
-    var totalMinutes2 = hour2 * 60 + minute2;
-    var differenceInMinutes = totalMinutes1 - totalMinutes2;
-    var resultHours = Math.floor(differenceInMinutes / 60);
-    var resultMinutes = differenceInMinutes % 60;
+    let [hour1, minute1] = appointmentTime.split(":").map(Number);
+    let [hour2, minute2] = durationTime.split(":").map(Number);
+    let totalMinutes1 = hour1 * 60 + minute1;
+    let totalMinutes2 = hour2 * 60 + minute2;
+    let differenceInMinutes = totalMinutes1 - totalMinutes2;
+    let resultHours = Math.floor(differenceInMinutes / 60);
+    let resultMinutes = differenceInMinutes % 60;
+    resultHours = resultHours < 0 && 24 - Math.abs(resultHours);
+    resultMinutes = resultMinutes < 0 && 59 - Math.abs(resultMinutes);
     distanceObj.value.estimated = resultHours + ":" + resultMinutes;
 }
 const getPostCode = (code) => {
@@ -231,7 +238,7 @@ watch(() => props.rowId, (id) => {
             <label for="appointment_date" class="col-sm-2 col-form-label">Randevu tarihi</label>
             <div class="col-sm-10">
                 <VueDatePicker v-model="AppointmentForm.appointment_date" :format="format" :min-date="new Date()"
-                    @update:model-value="handleDate"></VueDatePicker>
+                    locale="tr" @update:model-value="handleDate"></VueDatePicker>
             </div>
         </div>
 

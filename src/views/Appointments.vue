@@ -92,7 +92,7 @@ const filteredList = computed(() => {
                     {{ item.fields.agent_name }}
                 </td>
                 <td>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal"
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal"
                         @click="edit(item.id)">Düzenle</button>
                 </td>
             </tr>
