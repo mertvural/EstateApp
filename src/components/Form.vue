@@ -86,11 +86,17 @@ const estimatedTime = (appointmentTime, durationTime) => {
     if (resultHours < 0) {
         resultHours = 24 - Math.abs(resultHours);
     }
+    if (resultHours < 10) {
+        resultHours = "0" + resultHours;
+    }
     if (resultMinutes < 0) {
         resultMinutes = 59 - Math.abs(resultMinutes);
     }
     if (returnTimeHours > 23) {
         returnTimeHours = Math.abs(returnTimeHours) - 24
+    }
+    if (returnTimeHours < 10) {
+        returnTimeHours = "0" + returnTimeHours;
     }
     distanceObj.value.estimated = resultHours + ":" + resultMinutes;//going
     distanceObj.value.estimatedReturn = returnTimeHours + ":" + returnTimeMinutes;//return office
@@ -225,14 +231,13 @@ const clearForm = () => {
 
 const isConflict = (start1, end1, start2, end2) => {
     //console.log(start1, end1, start2, end2)
-    // console.log(start2)
-    // console.log(end1)
-    // console.log(start2 < end1 && start1 < end2)
-    return (
-        parseInt(start2.split(":")[0]) * 60 + parseInt(start2.split(":")[1]) < parseInt(end1.split(":")[0]) * 60 + parseInt(end1.split(":")[1])
-        &&
-        parseInt(start1.split(":")[0]) * 60 + parseInt(start1.split(":")[1]) < parseInt(end2.split(":")[0]) * 60 + parseInt(end2.split(":")[1])
-    );
+    let s2 = parseInt(start2.split(":")[0]) * 60 + parseInt(start2.split(":")[1]),
+        e1 = parseInt(end1.split(":")[0]) * 60 + parseInt(end1.split(":")[1]),
+        s1 = parseInt(start1.split(":")[0]) * 60 + parseInt(start1.split(":")[1]),
+        e2 = parseInt(end2.split(":")[0]) * 60 + parseInt(end2.split(":")[1]);
+    // console.log(s2 < e1)
+    // console.log(s1 < e2)
+    return (s2 < e1 && s1 < e2);
 }
 
 onMounted(() => {
@@ -254,6 +259,8 @@ watch(() => props.rowId, (id) => {
 /*conflict time detect*/
 watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () => {
     let conflictDetected = false;
+    alert.value = false;
+    btnDisabled.value = false;
     if (AppointmentForm.agent_name !== null && AppointmentForm.appointment_date !== null) {
         airtableBase('RealEstateTbl').select({
             view: "Grid"
@@ -265,7 +272,7 @@ watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () =
                 }
             })
             nameFilter.forEach((item) => {
-               //console.log(item.fields.time_period)
+                //console.log(item.fields.time_period)
                 let start1 = item.fields.time_period.split("-")[0];
                 let end1 = item.fields.time_period.split("-")[1];
                 let start2 = distanceObj.value.estimated;
@@ -276,7 +283,7 @@ watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () =
                     alertText.value = "Emlakçı çalışanı bu tarih ve saat aralığında çalışıyor. Başka tarih veya saat aralığı seçiniz.";
                     conflictDetected = true;
                     btnDisabled.value = true;
-                } else if(!conflictDetected) {
+                } else if (!conflictDetected) {
                     alert.value = false;
                     btnDisabled.value = false;
                 }
