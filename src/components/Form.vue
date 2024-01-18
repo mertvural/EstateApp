@@ -92,6 +92,9 @@ const estimatedTime = (appointmentTime, durationTime) => {
     if (resultMinutes < 0) {
         resultMinutes = 59 - Math.abs(resultMinutes);
     }
+    if (resultMinutes < 10) {
+        resultMinutes = "0" + resultMinutes;
+    }
     if (returnTimeHours > 23) {
         returnTimeHours = Math.abs(returnTimeHours) - 24
     }
@@ -230,14 +233,18 @@ const clearForm = () => {
 }
 
 const isConflict = (start1, end1, start2, end2) => {
-    //console.log(start1, end1, start2, end2)
+    // console.log(start1, end1, start2, end2)
     let s2 = parseInt(start2.split(":")[0]) * 60 + parseInt(start2.split(":")[1]),
         e1 = parseInt(end1.split(":")[0]) * 60 + parseInt(end1.split(":")[1]),
         s1 = parseInt(start1.split(":")[0]) * 60 + parseInt(start1.split(":")[1]),
         e2 = parseInt(end2.split(":")[0]) * 60 + parseInt(end2.split(":")[1]);
     // console.log(s2 < e1)
     // console.log(s1 < e2)
-    return (s2 < e1 && s1 < e2);
+    if (e1 > s2) {
+        return true
+    } else if (s2 < e1 && s1 < e2) {
+        return true
+    }
 }
 
 onMounted(() => {
