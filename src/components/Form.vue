@@ -52,15 +52,20 @@ const validationControl = () => {
     }
     return true
 }
+/**
+ * @param {string} date - Formats and returns the date
+ */
 const format = (date) => {
     const day = date.getDate();
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
     const hour = date.getHours();
     const minute = date.getMinutes();
-
     return `${day}.${month}.${year} - ${hour}:${minute}`;
 }
+/**
+ * @param {string} modelData - selected date
+ */
 const handleDate = (modelData) => {
     date.value = modelData;
     const day = modelData.getDate();
@@ -77,6 +82,10 @@ const handleDate = (modelData) => {
     const durationTime = hours + ":" + remainingMinutes;
     estimatedTime(appointmentTime, durationTime)
 }
+/**
+ * @param {string} appointmentTime - Appointment time
+ * @param {string} durationTime - Total time it will take to address
+ */
 const estimatedTime = (appointmentTime, durationTime) => {
     let [hour1, minute1] = appointmentTime.split(":").map(Number);
     let [hour2, minute2] = durationTime.split(":").map(Number);
@@ -110,6 +119,9 @@ const estimatedTime = (appointmentTime, durationTime) => {
     estimated.return = returnTimeHours + ":" + returnTimeMinutes;//return office
     AppointmentForm.time_period = estimated.going + "-" + estimated.return;
 }
+/**
+ * @param {string} code - post code
+ */
 const getPostCode = (code) => {
     const loader = $loading.show();
     postCode(code).then(function (response) {
@@ -125,6 +137,9 @@ const getPostCode = (code) => {
         loader.hide();
     })
 }
+/**
+ * @param {object} response - Data returned from postcodes API
+ */
 const getDistance = (response) => {
     const { latitude, longitude } = response;
     const service = new window.google.maps.DistanceMatrixService();
@@ -145,6 +160,9 @@ const getDistance = (response) => {
         }
     });
 }
+/**
+ * @param {object} response - Data returned from postcodes API
+ */
 const setDistanceLine = (response) => {
     const { latitude, longitude } = response;
     const coordinates = [
@@ -159,6 +177,9 @@ const setDistanceLine = (response) => {
         strokeWeight: 2,
     };
 }
+/**
+ * @param {number} val - Zoom level of the map
+ */
 const zoomSetting = (val) => {
     if (val > 500) {
         mapZoom.value = 5
@@ -216,6 +237,7 @@ const editAppointments = () => {
         myModalEl && myModalEl.querySelector(".btn-close").click();
     });
 }
+/*Fills in the names of employees working at the real estate agency*/
 const estateEmployeeNameLoaded = () => {
     airtableBase('AgentNameTbl').select({
         view: "Grid"
@@ -236,9 +258,14 @@ const clearForm = () => {
     distanceLine.value = null
     distanceObj.value = null
 }
-
+/**
+ * @param {string} start1 - start of busy time interval
+ * @param {string} end1 - end of busy time slot
+ * @param {string} start2 - time out of office
+ * @param {string} end2 - office arrival time
+ */
 const isConflict = (start1, end1, start2, end2) => {
-    // console.log(start1, end1, start2, end2)
+     //console.log(start1, end1, start2, end2)
     let s2 = parseInt(start2.split(":")[0]) * 60 + parseInt(start2.split(":")[1]),
         e1 = parseInt(end1.split(":")[0]) * 60 + parseInt(end1.split(":")[1]),
         s1 = parseInt(start1.split(":")[0]) * 60 + parseInt(start1.split(":")[1]),
@@ -258,6 +285,7 @@ onMounted(() => {
     estateEmployeeNameLoaded();
 });
 
+/*Runs when editing is triggered*/
 watch(() => props.rowId, (id) => {
     editRowId.value = id; //get the edit row id
     airtableBase('RealEstateTbl').find(id, function (err, record) {
