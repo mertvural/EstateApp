@@ -16,7 +16,6 @@ const estatePostalCode = { lat: parseFloat(VITE_LAT), lng: parseFloat(VITE_LNG) 
 const mapZoom = ref(10);
 const $loading = useLoading();
 const btnDisabled = ref(false);
-const isEditForm = ref(false);
 const estateEmployeeNameOption = ref([]);
 const $toast = useToast();
 const distanceObj = reactive({});
@@ -261,7 +260,6 @@ onMounted(() => {
 
 watch(() => props.rowId, (id) => {
     editRowId.value = id; //get the edit row id
-    isEditForm.value = id ? true : false
     airtableBase('RealEstateTbl').find(id, function (err, record) {
         if (err) { console.error(err); return; }
         for (const property in AppointmentForm) {
@@ -380,7 +378,7 @@ watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () =
                 <Polyline :options="distanceLine.value" v-if="distanceLine.value" />
             </GoogleMap>
         </div>
-        <button v-if="!isEditForm" class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnDisabled">Randevu
+        <button v-if="!editRowId" class="btn w-100 btn-primary btn-lg" @click="btnCreate()" :disabled="btnDisabled">Randevu
             Oluştur</button>
         <button v-else class="btn w-100 btn-primary btn-lg" @click="btnEdit()" :disabled="btnDisabled">Randevu
             Düzenle</button>
