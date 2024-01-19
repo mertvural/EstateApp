@@ -21,9 +21,10 @@ const $toast = useToast();
 const distanceObj = reactive({});
 const distanceLine = reactive({});
 const date = ref();
+let conflictDetected = false;
 const estimated = reactive({
     going: null,
-    return: null
+    back: null
 })
 const editRowId = ref();
 const alert = ref(false);
@@ -115,9 +116,12 @@ const estimatedTime = (appointmentTime, durationTime) => {
     if (returnTimeHours < 10) {
         returnTimeHours = "0" + returnTimeHours;
     }
+    if (returnTimeMinutes < 10) {
+        returnTimeMinutes = "0" + returnTimeMinutes;
+    }
     estimated.going = resultHours + ":" + resultMinutes;//going
-    estimated.return = returnTimeHours + ":" + returnTimeMinutes;//return office
-    AppointmentForm.time_period = estimated.going + "-" + estimated.return;
+    estimated.back = returnTimeHours + ":" + returnTimeMinutes;//return office
+    AppointmentForm.time_period = estimated.going + "-" + estimated.back;
 }
 /**
  * @param {string} code - post code
@@ -259,25 +263,25 @@ const clearForm = () => {
     distanceObj.value = null
 }
 /**
+ * @param {string} date - date 
  * @param {string} start1 - start of busy time interval
  * @param {string} end1 - end of busy time slot
  * @param {string} start2 - time out of office
  * @param {string} end2 - office arrival time
  */
-const isConflict = (start1, end1, start2, end2) => {
-     //console.log(start1, end1, start2, end2)
-    let s2 = parseInt(start2.split(":")[0]) * 60 + parseInt(start2.split(":")[1]),
-        e1 = parseInt(end1.split(":")[0]) * 60 + parseInt(end1.split(":")[1]),
-        s1 = parseInt(start1.split(":")[0]) * 60 + parseInt(start1.split(":")[1]),
-        e2 = parseInt(end2.split(":")[0]) * 60 + parseInt(end2.split(":")[1]);
-    // console.log(s2 < e1)
-    // console.log(s1 < e2)
-    if (s1 > s2 && e1 > e2) {
-        return false
-    } else if (e1 > s2) {
-        return true
-    } else if (s2 < e1 && s1 < e2) {
-        return true
+const isConflict = (date, start1, end1, start2, end2) => {
+    start1 = new Date(date.replaceAll(".", "-") + "T" + start1);
+    end1 = new Date(date.replaceAll(".", "-") + "T" + end1);
+    start2 = new Date(date.replaceAll(".", "-") + "T" + start2);
+    end2 = new Date(date.replaceAll(".", "-") + "T" + end2);
+    if (isConflictFunc(start1, end1, start2, end2)) {
+        alert.value = true;
+        alertText.value = "Emlakçı çalışanı bu tarih ve saat aralığında çalışıyor. Başka tarih veya saat aralığı seçiniz.";
+        conflictDetected = true;
+        btnDisabled.value = true;
+    }
+    function isConflictFunc(start1, end1, start2, end2) {
+        return end1 > start2 && start1 < end2;
     }
 }
 
@@ -295,14 +299,13 @@ watch(() => props.rowId, (id) => {
         }
         const time_period = record.get('time_period');
         estimated.going = time_period.split("-")[0];
-        estimated.return = time_period.split("-")[1];
+        estimated.back = time_period.split("-")[1];
         getPostCode(record.get('appointment_postcode'));
     });
 });
 
 /*conflict time detect*/
 watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () => {
-    let conflictDetected = false;
     alert.value = false;
     btnDisabled.value = false;
     if (AppointmentForm.agent_name !== null && AppointmentForm.appointment_date !== null) {
@@ -317,23 +320,10 @@ watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () =
             })
             nameFilter.forEach((item) => {
                 if (item.id === editRowId.value) return
-                let start1 = item.fields.time_period.split("-")[0];
-                let end1 = item.fields.time_period.split("-")[1];
-                let start2 = estimated.going;
-                let end2 = estimated.return;
-                if (start1 && end1 && start2 && end2) {
-                    let conflict = isConflict(start1, end1, start2, end2);
-                    //console.log(start1, end1, start2, end2)
-                    if (conflict) {
-                        alert.value = true;
-                        alertText.value = "Emlakçı çalışanı bu tarih ve saat aralığında çalışıyor. Başka tarih veya saat aralığı seçiniz.";
-                        conflictDetected = true;
-                        btnDisabled.value = true;
-                    } else if (!conflictDetected) {
-                        alert.value = false;
-                        btnDisabled.value = false;
-                    }
-                }
+                let [start, end] = item.fields.time_period.split("-");
+                const { going, back} = estimated;
+                let date = item.fields.appointment_date.split("-")[0];
+                isConflict(date, start, end, going, back);
             })
 
         }, function done(err) {
@@ -396,8 +386,8 @@ watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () =
             <p v-if="estimated.going">
                 Tahmini ofisten çıkış zamanı = <strong><u>{{ estimated.going }}</u></strong>
             </p>
-            <p class="mb-0" v-if="estimated.return">
-                Tahmini ofise varış zamanı = <strong><u>{{ estimated.return }}</u></strong>
+            <p class="mb-0" v-if="estimated.back">
+                Tahmini ofise varış zamanı = <strong><u>{{ estimated.back }}</u></strong>
             </p>
         </div>
         <div class="mb-3 row" v-show="distanceObj.value">
