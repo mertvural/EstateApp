@@ -25,9 +25,15 @@ const loadedTable = () => {
         }
     });
 }
+/**
+ * @param {string} id - Row id
+ */
 const edit = (id) => {
     rowId.value = id
 }
+/**
+ * @param {string} val - Takes increasing or decreasing values
+ */
 const sortDate = (val) => {
     if (val === "increasing") {
         return tableDatas.value.sort((a, b) => new Date(a.fields.appointment_date) - new Date(b.fields.appointment_date));
@@ -36,6 +42,9 @@ const sortDate = (val) => {
         return tableDatas.value.sort((b,a) => new Date(a.fields.appointment_date) - new Date(b.fields.appointment_date));
     }
 }
+/**
+ * @param {string} date - formatted dates
+ */
 const disabledDate = (date) => {
     return new Date() > new Date(date)
 }
