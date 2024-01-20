@@ -156,7 +156,7 @@ const getDistance = (response) => {
         if (status === 'OK') {
             const elements = response.rows[0].elements[0];
             distanceObj.value = elements;
-            AppointmentForm.appointment_date && !editRowId.value && handleDate(date.value)
+            AppointmentForm.appointment_date && handleDate(date.value)
             zoomSetting(parseInt(distanceObj.value.distance.text))
 
         } else {
@@ -297,10 +297,8 @@ watch(() => props.rowId, (id) => {
         for (const property in AppointmentForm) {
             AppointmentForm[property] = record.get([property])
         }
-        const time_period = record.get('time_period');
-        estimated.going = time_period.split("-")[0];
-        estimated.back = time_period.split("-")[1];
         getPostCode(record.get('appointment_postcode'));
+        date.value = new Date(record.get('appointment_date'));
     });
 });
 
@@ -321,7 +319,7 @@ watch(() => [AppointmentForm.agent_name, AppointmentForm.appointment_date], () =
             nameFilter.forEach((item) => {
                 if (item.id === editRowId.value) return
                 let [start, end] = item.fields.time_period.split("-");
-                const { going, back} = estimated;
+                const { going, back } = estimated;
                 let date = item.fields.appointment_date.split("-")[0];
                 isConflict(date, start, end, going, back);
             })
