@@ -22,7 +22,6 @@ const $toast = useToast();
 const distanceObj = reactive({});
 const distanceLine = reactive({});
 const date = ref();
-let conflictDetected = false;
 const estimated = reactive({
     going: null,
     back: null
@@ -275,10 +274,11 @@ const isConflict = (date, start1, end1, start2, end2) => {
     end1 = new Date(date.replaceAll(".", "-") + "T" + end1);
     start2 = new Date(date.replaceAll(".", "-") + "T" + start2);
     end2 = new Date(date.replaceAll(".", "-") + "T" + end2);
+    start1.getHours() >= 12 && end1.getHours() < 12 && end1.setDate(end1.getDate() + 1);  //If it is past 12 at night, increase the day of the month.
+    start2.getHours() >= 12 && end2.getHours() < 12 && end2.setDate(end2.getDate() + 1);  //If it is past 12 at night, increase the day of the month.
     if (isConflictFunc(start1, end1, start2, end2)) {
         alert.value = true;
-        alertText.value = "Emlakçı çalışanı bu tarih ve saat aralığında çalışıyor. Başka tarih veya saat aralığı seçiniz.";
-        conflictDetected = true;
+        alertText.value = AlertsTexts.conflictError;
         btnDisabled.value = true;
     }
     function isConflictFunc(start1, end1, start2, end2) {
