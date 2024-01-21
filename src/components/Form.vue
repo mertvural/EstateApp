@@ -7,6 +7,7 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import { GoogleMap, Polyline } from "vue3-google-map";
 import { useToast } from 'vue-toast-notification';
 import { postCode } from "../api/postCodes"
+import { AlertsTexts } from "../components/AlertsText.js"
 const { VITE_LAT, VITE_LNG, VITE_MAP_API, VITE_APPOINTMENT_TIME } = import.meta.env;
 const props = defineProps({
     rowId: String,
@@ -47,7 +48,7 @@ const btnEdit = () => {
 const validationControl = () => {
     for (const property in AppointmentForm) {
         if (!AppointmentForm[property]) {
-            $toast.error('Lütfen tüm alanları doldurunuz!');
+            $toast.error(AlertsTexts.validationError);
             return
         }
     }
@@ -134,7 +135,7 @@ const getPostCode = (code) => {
             setDistanceLine(response.data.result);
         }
     }).catch(() => {
-        $toast.error('Lütfen İngiltere de geçerli bir posta kodu giriniz!');
+        $toast.error(AlertsTexts.postCodeError);
         distanceObj.value = ""
         AppointmentForm.appointment_postcode = null;
     }).finally(() => {
@@ -209,13 +210,13 @@ const createAppointments = () => {
     }, function (err, record) {
         if (err) {
             console.error(err);
-            $toast.error('Randevu oluşturulurken hata meydana geldi');
+            $toast.error(AlertsTexts.createAppointmentsError);
             btnDisabled.value = false;
             loader.hide()
             return;
         }
         btnDisabled.value = false;
-        $toast.success('Randevu başarılı bir şekilde oluşturuldu');
+        $toast.success(AlertsTexts.createAppointmentsSuccess);
         loader.hide()
     });
     clearForm();
@@ -228,13 +229,13 @@ const editAppointments = () => {
     }, function (err, record) {
         if (err) {
             console.error(err);
-            $toast.error('Randevu düzenlenirken hata meydana geldi');
+            $toast.error(AlertsTexts.editAppointmentsError);
             loader.hide()
             btnDisabled.value = false;
             return;
         }
         loader.hide()
-        $toast.success('Randevu başarılı bir şekilde düzenlendi');
+        $toast.success(AlertsTexts.editAppointmentsSuccess);
         props.loadedTable();
         btnDisabled.value = false;
         var myModalEl = document.getElementById('editModal');
