@@ -9,3 +9,13 @@ h4 {font-size: 1.1rem;}
     html {font-size: 14px;}
 }
 tr.disabled {opacity: .4;}
+::-webkit-scrollbar {
+    width: 10px;
+    height:5px;
+    background: #ccc;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--bs-warning);
+    border-radius: 5px;
+    box-shadow: 50px 0 var(--bs-warning);;
+}
