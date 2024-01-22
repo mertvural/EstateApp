@@ -4,7 +4,7 @@
 <template>
     <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
 
-        <h2 class="mb-4">Menu</h2>
+        <h2 class="mb-4 d-none d-md-block">Menu</h2>
 
         <ul class="nav nav-pills flex-row flex-md-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
             <li class="nav-item mb-0 mb-md-3 me-3 me-md-0">
