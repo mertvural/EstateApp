@@ -6,10 +6,12 @@
     </h3>
     <hr>
     <p>
-        <i class="bi bi-megaphone"></i> Soldaki menüden randevu oluşturup kayıtların listesine bakabilirsiniz.
+        <i class="bi bi-megaphone"></i> <span class="d-none d-md-inline">Soldaki</span> <span
+            class="d-inline d-md-none">Üstdeki</span> menüden randevu oluşturup kayıtların listesine bakabilirsiniz.
     </p>
     <p>
-        <a href="https://github.com/mertvural/EstateApp" target="_blank" class="d-flex align-items-center text-decoration-none alert alert-primary">
+        <a href="https://github.com/mertvural/EstateApp" target="_blank"
+            class="d-flex align-items-center text-decoration-none alert alert-primary">
             <svg height="32" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="32" data-view-component="true"
                 class="octicon octicon-mark-github v-align-middle color-fg-default">
                 <path
