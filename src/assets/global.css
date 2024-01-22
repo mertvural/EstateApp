@@ -1,3 +1,4 @@
+body {background: var(--light-grad-pink-blue, radial-gradient(ellipse at 40% 0%, #bf398910 0, transparent 75%), radial-gradient(ellipse at 60% 0%, #096bde10 0, transparent 75%))}
 h1 {font-size: 1.5rem;}
 h2 {font-size: 1.4rem;}
 h3 {font-size: 1.3rem;}
