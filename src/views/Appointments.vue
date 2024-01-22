@@ -110,6 +110,9 @@ const filteredList = computed(() => {
             </tr>
         </tbody>
     </table>
+    <div class="alert alert-warning" v-if="filteredList.length<=0">
+        Kayıt bulunamadı
+    </div>
    </div>
     <Modal :rowId="rowId" :loadedTable="loadedTable" />    
 </template>
