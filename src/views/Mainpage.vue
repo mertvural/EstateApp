@@ -7,7 +7,7 @@
     <hr>
     <p>
         <i class="bi bi-megaphone"></i> <span class="d-none d-md-inline">Soldaki</span> <span
-            class="d-inline d-md-none">Üstdeki</span> menüden randevu oluşturup kayıtların listesine bakabilirsiniz.
+            class="d-inline d-md-none">Üstteki</span> menüden randevu oluşturup kayıtların listesine bakabilirsiniz.
     </p>
     <p>
         <a href="https://github.com/mertvural/EstateApp" target="_blank"
