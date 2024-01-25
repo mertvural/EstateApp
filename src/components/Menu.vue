@@ -19,7 +19,7 @@
                     Randevu Oluştur</router-link>
             </li>
         </ul>
-        <a href="https://www.linkedin.com/in/mert-vural-b8080563/" class="d-none d-md-block text-warning text-decoration-none d-flex align-items-center" target="_blank">
+        <a href="https://www.linkedin.com/in/mert-vural-b8080563/" class="user d-none d-md-block text-warning text-decoration-none d-flex align-items-center" target="_blank">
             <i class="bi bi-linkedin pe-1"></i>
             Mert Vural
         </a>

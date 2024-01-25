@@ -8,6 +8,18 @@ tr.disabled {opacity: .4;}
 ::-webkit-scrollbar {width: 10px;height:5px;background: #ccc}
 ::-webkit-scrollbar-thumb {background: var(--bs-warning);border-radius: 5px;box-shadow: 50px 0 var(--bs-warning)}
 .v-select {background-color: var(--bs-body-bg)}
+.user {font-size: 14px;position: fixed;bottom: 10px;left:30px; overflow: hidden;max-width: max-content;
+border-right: .15em solid var(--bs-warning);white-space: nowrap;margin: 0 auto;letter-spacing: .15em;animation: typing 30s steps(40, end),blink-caret 1s step-end infinite;}
+@keyframes typing {
+from { width: 0 }
+to { width: 100% }
+}
+
+/* The typewriter cursor effect */
+@keyframes blink-caret {
+from, to { border-color: transparent }
+50% { border-color: var(--bs-warning); }
+}
 @media (max-width:767px) {
     nav > div.min-vh-100 {min-height: auto !important;}
     html {font-size: 14px;}
